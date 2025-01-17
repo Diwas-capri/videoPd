@@ -1,150 +1,189 @@
-import React, { useState } from 'react';
-import {
-  Stepper,
-  Step,
-  StepLabel,
-  Button,
-  TextField,
-  Box,
-  Typography,
-} from '@mui/material';
+import React, { useEffect, useState } from "react";
+import { Box, Button, TextField, Typography } from "@mui/material";
+import useSocket from "../../hooks/useSocket";
 
-const StepperForm = ({setInitiateCall, initiateCall}) => {
-  const [activeStep, setActiveStep] = useState(0);
+const StepperForm = ({ setInitiateCall, initiateCall }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    address: '',
+    workingPlace: "",
+    workingYears: "",
+    overallExperience: "",
+    currentDesignation: "",
+    grossSalary: "",
+    salaryCreditDate: "",
+    obligations: "",
+    loanAmount: "",
+    loanPurpose: "",
+    otherIncome: "",
+    familyDetails: "",
   });
+  const {socket, connected} = useSocket();
 
-  const steps = ['Personal Details', 'Account Details', 'Address'];
-
-  const handleNext = () => {
-    if (isStepValid()) {
-      setActiveStep((prevActiveStep) => prevActiveStep + 1);
+  useEffect(() => {
+    console.log("Socket", connected, socket);
+  
+    if (socket && connected) {
+      socket.onmessage = (event) => {
+        try {
+          // Parse the message if it's in JSON format
+          const parsedData = JSON.parse(event.data); // Access event.data for the actual payload
+  
+          // Update formData or handle the received data as needed
+          // Example:
+          setFormData((prev) => ({ ...prev, ...parsedData }));
+        } catch (error) {
+          console.error("Error parsing message:", error, "Event data:", event.data);
+        }
+      };
     }
-  };
-
-  const handleBack = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep - 1);
-  };
+  }, [socket, connected]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const isStepValid = () => {
-    switch (activeStep) {
-      case 0:
-        return formData.name.trim() !== '' && /\S+@\S+\.\S+/.test(formData.email);
-      case 1:
-        return formData.password.trim().length >= 6;
-      case 2:
-        return formData.address.trim() !== '';
-      default:
-        return true;
-    }
-  };
-
   const handleSubmit = () => {
-    console.log('Form Submitted', formData);
+    console.log("Form Submitted", formData);
   };
 
   return (
-    <Box sx={{ width: '100%', p: 4 }}>
-      {!initiateCall && (
-      <Box sx={{ p: 2 }}>
-        <Button onClick={() => setInitiateCall(true)} variant="contained" color="primary">
-          Initiate video
+    <Box
+      sx={{
+        width: "100%",
+        height: "100%",
+        maxWidth: 600, // Limit the max width of the form
+        mx: "auto", // Center horizontally
+        p: 2,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        overflow: "hidden", // Ensure no content overflows the container
+      }}
+    >
+      <Typography variant="h5" align="center" sx={{ mb: 2 }}>
+        Questions
+      </Typography>
+      <Box
+        sx={{
+          flex: 1,
+          overflowY: "auto", // Enable scrolling for overflowing content
+          pr: 1, // Add padding for smooth scrolling
+        }}
+      >
+        <TextField
+          label="Where are you working?"
+          name="workingPlace"
+          value={formData.workingPlace}
+          onChange={handleChange}
+          fullWidth
+          required
+          sx={{ mb: 2 }}
+        />
+        <TextField
+          label="From how many years are you working?"
+          name="workingYears"
+          value={formData.workingYears}
+          onChange={handleChange}
+          fullWidth
+          required
+          sx={{ mb: 2 }}
+        />
+        <TextField
+          label="Overall work experience?"
+          name="overallExperience"
+          value={formData.overallExperience}
+          onChange={handleChange}
+          fullWidth
+          required
+          sx={{ mb: 2 }}
+        />
+        <TextField
+          label="What is your current designation?"
+          name="currentDesignation"
+          value={formData.currentDesignation}
+          onChange={handleChange}
+          fullWidth
+          required
+          sx={{ mb: 2 }}
+        />
+        <TextField
+          label="What is the Gross salary?"
+          name="grossSalary"
+          value={formData.grossSalary}
+          onChange={handleChange}
+          fullWidth
+          required
+          sx={{ mb: 2 }}
+        />
+        <TextField
+          label="On which date your salary gets credited?"
+          name="salaryCreditDate"
+          value={formData.salaryCreditDate}
+          onChange={handleChange}
+          fullWidth
+          required
+          sx={{ mb: 2 }}
+        />
+        <TextField
+          label="What all obligations you have?"
+          name="obligations"
+          value={formData.obligations}
+          onChange={handleChange}
+          fullWidth
+          required
+          sx={{ mb: 2 }}
+        />
+        <TextField
+          label="How much loan you require?"
+          name="loanAmount"
+          value={formData.loanAmount}
+          onChange={handleChange}
+          fullWidth
+          required
+          sx={{ mb: 2 }}
+        />
+        <TextField
+          label="Why do you need these funds?"
+          name="loanPurpose"
+          value={formData.loanPurpose}
+          onChange={handleChange}
+          fullWidth
+          required
+          sx={{ mb: 2 }}
+        />
+        <TextField
+          label="Do you have any other source of income?"
+          name="otherIncome"
+          value={formData.otherIncome}
+          onChange={handleChange}
+          fullWidth
+          required
+          sx={{ mb: 2 }}
+        />
+        <TextField
+          label="Who all are in your family?"
+          name="familyDetails"
+          value={formData.familyDetails}
+          onChange={handleChange}
+          fullWidth
+          required
+          sx={{ mb: 2 }}
+        />
+      </Box>
+      <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2, gap: 3 }}>
+        {!initiateCall && (
+            <Button
+              onClick={() => setInitiateCall(true)}
+              variant="contained"
+              color="primary"
+            >
+              Initiate Video
+            </Button>
+        )}
+        <Button variant="contained" onClick={handleSubmit}>
+          Submit
         </Button>
       </Box>
-      )}
-      <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-        {steps.map((label, index) => (
-          <Step key={index}>
-            <StepLabel>{label}</StepLabel>
-          </Step>
-        ))}
-      </Stepper>
-      {activeStep === steps.length ? (
-        <Typography variant="h5" align="center" sx={{ mb: 4 }}>
-          All steps completed - You’re finished!
-        </Typography>
-      ) : (
-        <>
-          <Box component="form" sx={{ mb: 4 }}>
-            {activeStep === 0 && (
-              <>
-                <TextField
-                  label="Name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  fullWidth
-                  required
-                  sx={{ mb: 2 }}
-                />
-                <TextField
-                  label="Email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  fullWidth
-                  required
-                  sx={{ mb: 2 }}
-                />
-              </>
-            )}
-            {activeStep === 1 && (
-              <TextField
-                label="Password"
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-                fullWidth
-                required
-                sx={{ mb: 2 }}
-                helperText="Password must be at least 6 characters long"
-              />
-            )}
-            {activeStep === 2 && (
-              <TextField
-                label="Address"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                fullWidth
-                required
-                sx={{ mb: 2 }}
-              />
-            )}
-          </Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Button
-              disabled={activeStep === 0}
-              onClick={handleBack}
-              variant="outlined"
-            >
-              Back
-            </Button>
-            {activeStep === steps.length - 1 ? (
-              <Button variant="contained" onClick={handleSubmit}>
-                Finish
-              </Button>
-            ) : (
-              <Button
-                variant="contained"
-                onClick={handleNext}
-                disabled={!isStepValid()}
-              >
-                Next
-              </Button>
-            )}
-          </Box>
-        </>
-      )}
+      
     </Box>
   );
 };

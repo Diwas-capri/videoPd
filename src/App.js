@@ -5,13 +5,13 @@ import StepperForm from './components/StepperForm';
 import MainScreen from './components/Video/index.js';
 
 const App = () => (
-  <Router>
-    <Routes>
-      <Route path="/" element={<MainScreen />} />
-      <Route path="/agent" element={<AgentVideoScreen />} />
-      <Route path="/user" element={<UserVideoScreen />} />
-    </Routes>
-  </Router>
+    <Router>
+      <Routes>
+        <Route path="/" element={<MainScreen />} />
+        <Route path="/agent" element={<AgentVideoScreen />} />
+        <Route path="/user" element={<UserVideoScreen />} />
+      </Routes>
+    </Router>
 );
 
 export default App;
