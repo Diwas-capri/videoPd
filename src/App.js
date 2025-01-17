@@ -1,13 +1,17 @@
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import AgentVideoScreen from './components/Video/AgentVideoBox';
+import UserVideoScreen from './components/Video/UserVideoBox.js';
 import StepperForm from './components/StepperForm';
+import MainScreen from './components/Video/index.js';
 
-function App() {
-  return (
-    <div className="App">
-      <StepperForm />
-    </div>
-  );
-}
+const App = () => (
+  <Router>
+    <Routes>
+      <Route path="/" element={<MainScreen />} />
+      <Route path="/agent" element={<AgentVideoScreen />} />
+      <Route path="/user" element={<UserVideoScreen />} />
+    </Routes>
+  </Router>
+);
 
 export default App;

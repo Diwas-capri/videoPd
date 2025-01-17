@@ -9,7 +9,7 @@ import {
   Typography,
 } from '@mui/material';
 
-const StepperForm = () => {
+const StepperForm = ({setInitiateCall, initiateCall}) => {
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
     name: '',
@@ -53,6 +53,13 @@ const StepperForm = () => {
 
   return (
     <Box sx={{ width: '100%', p: 4 }}>
+      {!initiateCall && (
+      <Box sx={{ p: 2 }}>
+        <Button onClick={() => setInitiateCall(true)} variant="contained" color="primary">
+          Initiate video
+        </Button>
+      </Box>
+      )}
       <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
         {steps.map((label, index) => (
           <Step key={index}>
