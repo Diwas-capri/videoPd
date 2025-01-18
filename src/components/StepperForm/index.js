@@ -16,17 +16,18 @@ const StepperForm = ({ setInitiateCall, initiateCall }) => {
     otherIncome: "",
     familyDetails: "",
   });
-  const {socket, connected} = useSocket();
+  const { socket, connected, sendMessage } = useSocket();
 
   useEffect(() => {
     console.log("Socket", connected, socket);
-  
+
     if (socket && connected) {
       socket.onmessage = (event) => {
+        console.log("Received message from server:", event);
         try {
           // Parse the message if it's in JSON format
           const parsedData = JSON.parse(event.data); // Access event.data for the actual payload
-  
+
           // Update formData or handle the received data as needed
           // Example:
           setFormData((prev) => ({ ...prev, ...parsedData }));
@@ -42,14 +43,14 @@ const StepperForm = ({ setInitiateCall, initiateCall }) => {
   };
 
   const handleSubmit = () => {
-    console.log("Form Submitted", formData);
+    socket.send(formData);
   };
 
   return (
     <Box
       sx={{
         width: "100%",
-        height: "100%",
+        height: "800px",
         maxWidth: 600, // Limit the max width of the form
         mx: "auto", // Center horizontally
         p: 2,
@@ -168,9 +169,9 @@ const StepperForm = ({ setInitiateCall, initiateCall }) => {
           required
           sx={{ mb: 2 }}
         />
-      </Box>
-      <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2, gap: 3 }}>
-        {!initiateCall && (
+
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2, gap: 3 }}>
+          {!initiateCall && (
             <Button
               onClick={() => setInitiateCall(true)}
               variant="contained"
@@ -178,12 +179,14 @@ const StepperForm = ({ setInitiateCall, initiateCall }) => {
             >
               Initiate Video
             </Button>
-        )}
-        <Button variant="contained" onClick={handleSubmit}>
-          Submit
-        </Button>
+          )}
+          <Button variant="contained" onClick={handleSubmit}>
+            Submit
+          </Button>
+        </Box>
       </Box>
-      
+
+
     </Box>
   );
 };

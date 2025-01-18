@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-const wsUrl = "ws://00da-203-122-25-66.ngrok-free.app";
+const wsUrl = "ws://d204-122-162-144-53.ngrok-free.app";
 
 const useSocket = () => {
   const [connected, setConnected] = useState(false);

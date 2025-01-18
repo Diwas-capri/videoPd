@@ -44,6 +44,7 @@ const AgentVideoBox = () => {
   const [peerId, setPeerId] = useState(null);
   const [call, setCall] = useState(null);
   const [localStream, setLocalStream] = useState(null);
+  const [localStreamSend, setLocalStreamSend] = useState(null);
   const [videoMuted, setVideoMuted] = useState(false);
   const [audioMuted, setAudioMuted] = useState(false);
   const [imageCaptured, setImageCaptured] = useState([]);
@@ -51,53 +52,25 @@ const AgentVideoBox = () => {
   const [selectedOption, setSelectedOption] = React.useState("");
   const {socket, connected} = useSocket();
 
-  const sendStreamOverSocket = (stream) => {
-    if (!connected || !socket) {
-      console.warn("WebSocket is not connected. Cannot send stream.");
-      return;
-    }
-
-    // Use MediaRecorder to encode the MediaStream
-    console.log("Sending stream over socket", stream);
-
-    const mediaRecorder = new MediaRecorder(stream);
-    mediaRecorder.ondataavailable = (event) => {
-      if (event.data.size > 0) {
-        // Send the chunk of recorded data through WebSocket
-        socket.send(event.data);
-        console.log("Stream data sent:", event.data);
-      }
-    };
-
-    mediaRecorder.start(100); // Record data in 100ms intervals
-
-    // Stop the recorder when the stream ends
-    stream.getTracks().forEach((track) => {
-      track.onended = () => {
-        mediaRecorder.stop();
-      };
-    });
-  };
-
   useEffect(() => {
     const peerInstance = new Peer("1234");
     setPeer(peerInstance);
 
     peerInstance.on("open", (id) => {
+      console.log("Peer ID srart:", id);
       setPeerId(id);
     });
 
     peerInstance.on("call", (incomingCall) => {
       if (!localStream) return;
 
-      incomingCall.answer(localStream);
+      incomingCall.answer(localStreamSend);
       setCall(incomingCall);
 
       incomingCall.on("stream", (remoteStream) => {
         if (remoteVideoRef.current) {
           remoteVideoRef.current.srcObject = remoteStream;
           remoteVideoRef.current.play();
-          sendStreamOverSocket(remoteStream);
         }
       });
 
@@ -116,12 +89,33 @@ const AgentVideoBox = () => {
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
           localVideoRef.current.play();
+          localVideoRef.current.muted = true;
+        }
+        setLocalStreamSend(stream);
+        const audioTrack = stream.getAudioTracks()[0];
+        if (audioTrack) {
+          audioTrack.enabled = false;
         }
         setLocalStream(stream);
-      })
-      .catch(console.error);
-  };
 
+        const mediaRecorder = new MediaRecorder(stream, {
+          mimeType: 'video/webm; codecs=vp8',
+        });
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0 && socket?.send && connected) {
+            console.log('sending stream ', event.data);
+            socket.send({userType: 'agent', stream: event.data}); 
+          }
+        };
+
+        mediaRecorder.start(100); 
+      })
+      .catch((error) => {
+        console.error("Error accessing media devices:", error);
+      });
+  };
+  
   useEffect(() => {
     startVideo();
   }, []);
@@ -168,6 +162,8 @@ const AgentVideoBox = () => {
     }
   };
 
+  console.log('peer id ', peerId);
+
   return (
     <Container maxWidth="md" sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
       {/* Title */}
@@ -177,7 +173,7 @@ const AgentVideoBox = () => {
 
       {/* Controls and Copy Button */}
       <Grid container spacing={2} justifyContent="center" alignItems="center">
-        {/* <Grid item>
+        <Grid item>
           <IconButton onClick={toggleVideo} color={videoMuted ? "secondary" : "primary"}>
             {videoMuted ? <VideocamOffIcon /> : <VideocamIcon />}
           </IconButton>
@@ -186,7 +182,7 @@ const AgentVideoBox = () => {
           <IconButton onClick={toggleAudio} color={audioMuted ? "secondary" : "primary"}>
             {audioMuted ? <MicOffIcon /> : <MicIcon />}
           </IconButton>
-        </Grid> */}
+        </Grid>
         <Grid item>
           <IconButton onClick={endCall} color="error">
             <CallEndIcon />
@@ -211,9 +207,20 @@ const AgentVideoBox = () => {
       <Box sx={{ position: "relative", width: "100%", aspectRatio: "16/9", backgroundColor: "#000", borderRadius: 2 }}>
         <video
           ref={remoteVideoRef}
-          style={{ width: "100%", height: "100%", borderRadius: "8px" }}
+          style={{ width: "100%", height: "500px", borderRadius: "8px" }}
           autoPlay
-          muted
+        />
+        <video
+          ref={localVideoRef}
+          style={{
+             width: "20%",
+             height: "20%",
+             borderRadius: "8px",
+             position: "absolute",
+             top: 8,
+             left: 1,
+           }}
+          autoPlay
         />
         <Tooltip title="Capture Image">
           <IconButton
