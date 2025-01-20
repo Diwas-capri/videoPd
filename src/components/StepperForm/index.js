@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Box, Button, TextField, Typography } from "@mui/material";
 import useSocket from "../../hooks/useSocket";
+import { useSocketContext } from "../../context/SocketContext";
 
 const StepperForm = ({ setInitiateCall, initiateCall }) => {
   const [formData, setFormData] = useState({
@@ -16,27 +17,19 @@ const StepperForm = ({ setInitiateCall, initiateCall }) => {
     otherIncome: "",
     familyDetails: "",
   });
-  const { socket, connected, sendMessage } = useSocket();
+  const { socket, connected, receiveEventdata } = useSocketContext();
 
   useEffect(() => {
-    console.log("Socket", connected, socket);
-
-    if (socket && connected) {
-      socket.onmessage = (event) => {
-        console.log("Received message from server:", event);
-        try {
-          // Parse the message if it's in JSON format
-          const parsedData = JSON.parse(event.data); // Access event.data for the actual payload
-
-          // Update formData or handle the received data as needed
-          // Example:
-          setFormData((prev) => ({ ...prev, ...parsedData }));
-        } catch (error) {
-          console.error("Error parsing message:", error, "Event data:", event.data);
-        }
-      };
+    if (receiveEventdata) {
+      try {
+        const parsedData = JSON.parse(receiveEventdata);
+        setFormData((prev) => ({ ...prev, ...parsedData }));
+      } catch (error) {
+        console.error("Error parsing received message:", error);
+      }
     }
-  }, [socket, connected]);
+  }, [receiveEventdata]);
+  
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

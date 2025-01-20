@@ -5,10 +5,12 @@ import VideocamOffIcon from '@mui/icons-material/VideocamOff';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import MicOffIcon from '@mui/icons-material/MicOff';
 import MicIcon from '@mui/icons-material/Mic';
-import FlipCameraIosIcon from '@mui/icons-material/FlipCameraIos'; // Import the flip camera icon
+import FlipCameraIosIcon from '@mui/icons-material/FlipCameraIos';
 import Peer from 'peerjs';
 import OTPVerificationModal from '../../Otp';
-import useSocket from '../../../hooks/useSocket';
+import MediaRecorder from "../../../helper/MediaRecorder";
+import { useSocketContext } from '../../../context/SocketContext';
+import mediaRecorderHelper from '../../../helper/MediaRecorder';
 
 const UserVideoBox = () => {
   const [confimJoin, setConfirmJoin] = useState(true);
@@ -23,8 +25,8 @@ const UserVideoBox = () => {
   const [videoMuted, setVideoMuted] = useState(false);
   const [audioMuted, setAudioMuted] = useState(false);
   const [tellAnswerClick, setTellAnswerClick] = useState(false);
-  const [currentCamera, setCurrentCamera] = useState('user'); // State to manage camera (front/back)
-  const {socket, connected} = useSocket();
+  const [currentCamera, setCurrentCamera] = useState('user');
+  const {socket, connected} = useSocketContext();
 
   const urlParams = new URLSearchParams(window.location.search);
   const agentPeerId = urlParams.get('peerId');
@@ -61,6 +63,7 @@ const UserVideoBox = () => {
     navigator.mediaDevices
       .getUserMedia({ video: true, audio: true })
       .then((stream) => {
+        mediaRecorderHelper(stream, socket);
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
           localVideoRef.current.play();
@@ -72,18 +75,7 @@ const UserVideoBox = () => {
           audioTrack.enabled = false;
         }
         setLocalStream(stream);
-        const mediaRecorder = new MediaRecorder(stream, {
-          mimeType: 'video/webm; codecs=vp8',
-        });
-
-        mediaRecorder.ondataavailable = (event) => {
-          if (event.data.size > 0 && socket?.send && connected) {
-            console.log('sending stream ', event.data);
-            socket.send({userType: 'agent', stream: event.data}); 
-          }
-        };
-
-        mediaRecorder.start(100); 
+        // MediaRecorder(stream, socket);
       })
       .catch((error) => {
         console.error("Error accessing media devices:", error);
@@ -163,6 +155,7 @@ const UserVideoBox = () => {
       .getUserMedia({ video: { facingMode: newCamera }, audio: true })
       .then((newStream) => {
         // Set the new stream
+        MediaRecorder(newStream, socket);
         setLocalStream(newStream);
   
         // Set the new stream to the local video element
@@ -208,12 +201,9 @@ const UserVideoBox = () => {
   };
 
   const tellAnswer = () => {
-    setTellAnswerClick((prev) => !prev);
-    if (!tellAnswerClick) {
-      startRecording();
-    } else {
-      stopRecording();
-    }
+    setTellAnswerClick((prev) => {
+      return !prev
+    });
   };
 
   return (

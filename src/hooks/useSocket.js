@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 
-const wsUrl = "ws://d204-122-162-144-53.ngrok-free.app";
+const wsUrl = "ws://localhost:8765";
 
 const useSocket = () => {
   const [connected, setConnected] = useState(false);
+  const [receiveEvent, setReceiveEvent] = useState({});
   const socketRef = useRef(null);
 
   useEffect(() => {
@@ -17,6 +18,15 @@ const useSocket = () => {
       setConnected(true);
     };
 
+    // Handle incoming messages
+    socket.onmessage = (event) => {
+        try {
+          const data = event.data ; // Parse the JSON here
+          setReceiveEvent(data); // Set parsed data to ensure a new reference
+        } catch (error) {
+          console.error("Error parsing WebSocket message:", error);
+        }
+    };
     // Handle errors
     socket.onerror = (error) => {
       console.error("WebSocket error:", error);
@@ -27,13 +37,14 @@ const useSocket = () => {
       console.log("WebSocket disconnected");
       setConnected(false);
     };
+
     // Cleanup WebSocket on unmount
     return () => {
       socket.close();
     };
-  }, [wsUrl]);
+  }, []);
 
-  return { socket: socketRef.current, connected };
+  return { socket: socketRef.current, connected, receiveEventdata: receiveEvent };
 };
 
 export default useSocket;

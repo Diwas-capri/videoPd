@@ -21,8 +21,9 @@ import MicOffIcon from "@mui/icons-material/MicOff";
 import MicIcon from "@mui/icons-material/Mic";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import Peer from "peerjs";
-import AlertDialog from "../../dialog";
-import useSocket from "../../../hooks/useSocket";
+import MediaRecorder from "../../../helper/MediaRecorder";
+import { useSocketContext } from "../../../context/SocketContext";
+import mediaRecorderHelper from "../../../helper/MediaRecorder";
 
 const style = {
   position: 'absolute',
@@ -37,7 +38,7 @@ const style = {
 };
 
 
-const AgentVideoBox = () => {
+const AgentVideoBox = ({setInitiateCall, initiateCall}) => {
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const [peer, setPeer] = useState(null);
@@ -49,8 +50,10 @@ const AgentVideoBox = () => {
   const [audioMuted, setAudioMuted] = useState(false);
   const [imageCaptured, setImageCaptured] = useState([]);
   const [open, setOpen] = React.useState(false);
+  const [asking, setAsking] = React.useState(false);
   const [selectedOption, setSelectedOption] = React.useState("");
-  const {socket, connected} = useSocket();
+  const [recorder, setRecorder] = useState(null);
+  const { socket, connected, receiveEventdata } = useSocketContext();
 
   useEffect(() => {
     const peerInstance = new Peer("1234");
@@ -86,30 +89,18 @@ const AgentVideoBox = () => {
     navigator.mediaDevices
       .getUserMedia({ video: true, audio: true })
       .then((stream) => {
+        mediaRecorderHelper(stream, socket);
+        setLocalStreamSend(stream);
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
           localVideoRef.current.play();
           localVideoRef.current.muted = true;
         }
-        setLocalStreamSend(stream);
         const audioTrack = stream.getAudioTracks()[0];
         if (audioTrack) {
           audioTrack.enabled = false;
         }
         setLocalStream(stream);
-
-        const mediaRecorder = new MediaRecorder(stream, {
-          mimeType: 'video/webm; codecs=vp8',
-        });
-
-        mediaRecorder.ondataavailable = (event) => {
-          if (event.data.size > 0 && socket?.send && connected) {
-            console.log('sending stream ', event.data);
-            socket.send({userType: 'agent', stream: event.data}); 
-          }
-        };
-
-        mediaRecorder.start(100); 
       })
       .catch((error) => {
         console.error("Error accessing media devices:", error);
@@ -117,7 +108,7 @@ const AgentVideoBox = () => {
   };
   
   useEffect(() => {
-    startVideo();
+      startVideo();
   }, []);
 
   const cleanup = () => {
@@ -132,6 +123,7 @@ const AgentVideoBox = () => {
       setLocalStream(null);
     }
     cleanup();
+    setInitiateCall(false);
   };
 
   const toggleVideo = () => {
@@ -162,14 +154,34 @@ const AgentVideoBox = () => {
     }
   };
 
-  console.log('peer id ', peerId);
+  const handleAskingToogle = () => {
+    setAsking(!asking);
+    if(asking){
+      socket.send('send_answer');
+    }
+  }
 
   return (
     <Container maxWidth="md" sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
       {/* Title */}
-      <Typography variant="h4" align="center">
-        Agent Video Screen
-      </Typography>
+      <Box sx={{display: "flex", flexDirection: "row", gap: 2, justifyContent: "space-between"}}>
+        <Typography variant="h4" align="center">
+          Agent Video Screen
+        </Typography>
+        <Grid item>
+            {peerId && (
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() =>
+                  navigator.clipboard.writeText(`${window?.location}user?peerId=${peerId}`)
+                }
+              >
+                Copy Video Link
+              </Button>
+            )}
+        </Grid>
+      </Box>
 
       {/* Controls and Copy Button */}
       <Grid container spacing={2} justifyContent="center" alignItems="center">
@@ -189,17 +201,14 @@ const AgentVideoBox = () => {
           </IconButton>
         </Grid>
         <Grid item>
-          {peerId && (
-            <Button
+          <Button
               variant="contained"
               color="primary"
-              onClick={() =>
-                navigator.clipboard.writeText(`${window?.location}user?peerId=${peerId}`)
-              }
+              onClick={handleAskingToogle}
+              sx={{ width: "100%" }}
             >
-              Copy Video Link
+              {!asking ? 'Ask Question' : 'Listing...'}
             </Button>
-          )}
         </Grid>
       </Grid>
 
