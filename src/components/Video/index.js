@@ -14,7 +14,7 @@ const MainScreen = () => {
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
-        gap: 3, // Adds space between the two papers when in 50/50 mode
+        gap: 3,
       }}
     >
       {initiateCall && (
@@ -24,7 +24,7 @@ const MainScreen = () => {
             padding: 3,
             borderRadius: 2,
             boxShadow: 3,
-            transition: "width 0.3s", // Smooth transition when changing widths
+            transition: "width 0.3s",
           }}
         >
           <AgentVideoScreen
@@ -39,7 +39,7 @@ const MainScreen = () => {
           padding: 3,
           borderRadius: 2,
           boxShadow: 3,
-          transition: "width 0.3s", // Smooth transition when changing widths
+          transition: "width 0.3s",
         }}
       >
         <StepperForm

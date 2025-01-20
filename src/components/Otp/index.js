@@ -13,7 +13,7 @@ import CloseIcon from "@mui/icons-material/Close";
 
 const OTPVerificationModal = ({ open, setConfirmJoin }) => {
   const [step, setStep] = useState("send");
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("7892398764");
   const [otp, setOtp] = useState(new Array(6).fill(""));
   const [dummyOtp, setDummyOtp] = useState("123456");
 
@@ -98,6 +98,7 @@ const OTPVerificationModal = ({ open, setConfirmJoin }) => {
                     fullWidth
                     label="Phone Number"
                     value={phoneNumber}
+                    disabled
                     onChange={(e) => setPhoneNumber(e.target.value)}
                     inputProps={{ maxLength: 10 }}
                     sx={{ mb: 3 }}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Box, Button, TextField, Typography } from "@mui/material";
+import { Box, Button, Paper, TextField, Typography } from "@mui/material";
 import useSocket from "../../hooks/useSocket";
 import { useSocketContext } from "../../context/SocketContext";
 
@@ -29,7 +29,7 @@ const StepperForm = ({ setInitiateCall, initiateCall }) => {
       }
     }
   }, [receiveEventdata]);
-  
+
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -43,24 +43,21 @@ const StepperForm = ({ setInitiateCall, initiateCall }) => {
     <Box
       sx={{
         width: "100%",
-        height: "800px",
-        maxWidth: 600, // Limit the max width of the form
-        mx: "auto", // Center horizontally
-        p: 2,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        overflow: "hidden", // Ensure no content overflows the container
+        maxWidth: "600px",
+        mx: "auto",
+        p: 1,
       }}
+      component={Paper}
     >
-      <Typography variant="h5" align="center" sx={{ mb: 2 }}>
+      <Typography variant="h5" align="center" sx={{ mb: 3, fontWeight: 600 }}>
         Questions
       </Typography>
       <Box
         sx={{
           flex: 1,
-          overflowY: "auto", // Enable scrolling for overflowing content
-          pr: 1, // Add padding for smooth scrolling
+          overflowY: "auto",
+          maxHeight: '650px',
+          pr: 1,
         }}
       >
         <TextField
@@ -163,7 +160,9 @@ const StepperForm = ({ setInitiateCall, initiateCall }) => {
           sx={{ mb: 2 }}
         />
 
-        <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2, gap: 3 }}>
+        
+      </Box>
+      <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2, gap: 3 }}>
           {!initiateCall && (
             <Button
               onClick={() => setInitiateCall(true)}
@@ -177,8 +176,6 @@ const StepperForm = ({ setInitiateCall, initiateCall }) => {
             Submit
           </Button>
         </Box>
-      </Box>
-
 
     </Box>
   );

@@ -56,34 +56,45 @@ const AgentVideoBox = ({setInitiateCall, initiateCall}) => {
   const { socket, connected, receiveEventdata } = useSocketContext();
 
   useEffect(() => {
-    const peerInstance = new Peer("1234");
+    if (!localStream) return;
+  
+    const peerInstance = new Peer();
     setPeer(peerInstance);
-
+  
     peerInstance.on("open", (id) => {
-      console.log("Peer ID srart:", id);
+      console.log("Peer ID start:", id);
       setPeerId(id);
     });
-
+  
     peerInstance.on("call", (incomingCall) => {
       if (!localStream) return;
-
+  
       incomingCall.answer(localStreamSend);
       setCall(incomingCall);
-
+  
       incomingCall.on("stream", (remoteStream) => {
         if (remoteVideoRef.current) {
           remoteVideoRef.current.srcObject = remoteStream;
           remoteVideoRef.current.play();
         }
       });
-
-      incomingCall.on("close", cleanup);
+  
+      incomingCall.on("close", () => {
+        console.log("Call closed.");
+        cleanup();
+      });
     });
-
+  
+    peerInstance.on("error", (err) => {
+      console.error("Peer error:", err);
+    });
+  
     return () => {
+      console.log("Cleaning up Peer instance.");
       peerInstance.destroy();
     };
   }, [localStream]);
+  
 
   const startVideo = () => {
     navigator.mediaDevices

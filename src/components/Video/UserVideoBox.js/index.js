@@ -13,7 +13,7 @@ import { useSocketContext } from '../../../context/SocketContext';
 import mediaRecorderHelper from '../../../helper/MediaRecorder';
 
 const UserVideoBox = () => {
-  const [confimJoin, setConfirmJoin] = useState(true);
+  const [confimJoin, setConfirmJoin] = useState(false);
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const [peer, setPeer] = useState(null);
