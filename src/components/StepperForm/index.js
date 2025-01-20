@@ -59,7 +59,7 @@ const StepperForm = ({ setInitiateCall, initiateCall }) => {
 
       <Divider sx={{ mb: 3 }} />
 
-      <Box sx={{ overflowY: "auto", maxHeight: "650px", pr: 1 }}>
+      <Box sx={{ overflowY: "auto", maxHeight: "700px", pr: 1 }}>
         <Typography variant="h6" sx={{ mb: 2, fontWeight: 500 }}>
           Work Details
         </Typography>
