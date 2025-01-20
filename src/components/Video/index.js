@@ -10,7 +10,6 @@ const MainScreen = () => {
     <Box
       sx={{
         width: "100%",
-        p: 4,
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
@@ -21,6 +20,7 @@ const MainScreen = () => {
         <Paper
           sx={{
             width: initiateCall ? "50%" : "100%",
+            height: "100%",
             padding: 3,
             borderRadius: 2,
             boxShadow: 3,
@@ -39,7 +39,7 @@ const MainScreen = () => {
           padding: 3,
           borderRadius: 2,
           boxShadow: 3,
-          transition: "width 0.3s", // Smooth transition when changing widths
+          transition: "width 0.6s", // Smooth transition when changing widths
         }}
       >
         <StepperForm

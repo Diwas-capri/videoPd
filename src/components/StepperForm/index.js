@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Box, Button, TextField, Typography } from "@mui/material";
+import { Box, Button, TextField, Typography, Grid, Divider, Paper } from "@mui/material";
 import useSocket from "../../hooks/useSocket";
 
 const StepperForm = ({ setInitiateCall, initiateCall }) => {
@@ -19,20 +19,13 @@ const StepperForm = ({ setInitiateCall, initiateCall }) => {
   const { socket, connected, sendMessage } = useSocket();
 
   useEffect(() => {
-    console.log("Socket", connected, socket);
-
     if (socket && connected) {
       socket.onmessage = (event) => {
-        console.log("Received message from server:", event);
         try {
-          // Parse the message if it's in JSON format
-          const parsedData = JSON.parse(event.data); // Access event.data for the actual payload
-
-          // Update formData or handle the received data as needed
-          // Example:
+          const parsedData = JSON.parse(event.data);
           setFormData((prev) => ({ ...prev, ...parsedData }));
         } catch (error) {
-          console.error("Error parsing message:", error, "Event data:", event.data);
+          console.error("Error parsing message:", error, event.data);
         }
       };
     }
@@ -50,143 +43,177 @@ const StepperForm = ({ setInitiateCall, initiateCall }) => {
     <Box
       sx={{
         width: "100%",
-        height: "800px",
-        maxWidth: 600, // Limit the max width of the form
-        mx: "auto", // Center horizontally
-        p: 2,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        overflow: "hidden", // Ensure no content overflows the container
+        maxWidth: "600px",
+        mx: "auto",
+        p: 3,
+        mt: 4,
+        background: "#fff",
+        borderRadius: 2,
+        boxShadow: 3,
       }}
+      component={Paper}
     >
-      <Typography variant="h5" align="center" sx={{ mb: 2 }}>
-        Questions
+      <Typography variant="h5" align="center" sx={{ mb: 3, fontWeight: 600 }}>
+        PD Questions
       </Typography>
-      <Box
-        sx={{
-          flex: 1,
-          overflowY: "auto", // Enable scrolling for overflowing content
-          pr: 1, // Add padding for smooth scrolling
-        }}
-      >
-        <TextField
-          label="Where are you working?"
-          name="workingPlace"
-          value={formData.workingPlace}
-          onChange={handleChange}
-          fullWidth
-          required
-          sx={{ mb: 2 }}
-        />
-        <TextField
-          label="From how many years are you working?"
-          name="workingYears"
-          value={formData.workingYears}
-          onChange={handleChange}
-          fullWidth
-          required
-          sx={{ mb: 2 }}
-        />
-        <TextField
-          label="Overall work experience?"
-          name="overallExperience"
-          value={formData.overallExperience}
-          onChange={handleChange}
-          fullWidth
-          required
-          sx={{ mb: 2 }}
-        />
-        <TextField
-          label="What is your current designation?"
-          name="currentDesignation"
-          value={formData.currentDesignation}
-          onChange={handleChange}
-          fullWidth
-          required
-          sx={{ mb: 2 }}
-        />
-        <TextField
-          label="What is the Gross salary?"
-          name="grossSalary"
-          value={formData.grossSalary}
-          onChange={handleChange}
-          fullWidth
-          required
-          sx={{ mb: 2 }}
-        />
-        <TextField
-          label="On which date your salary gets credited?"
-          name="salaryCreditDate"
-          value={formData.salaryCreditDate}
-          onChange={handleChange}
-          fullWidth
-          required
-          sx={{ mb: 2 }}
-        />
-        <TextField
-          label="What all obligations you have?"
-          name="obligations"
-          value={formData.obligations}
-          onChange={handleChange}
-          fullWidth
-          required
-          sx={{ mb: 2 }}
-        />
-        <TextField
-          label="How much loan you require?"
-          name="loanAmount"
-          value={formData.loanAmount}
-          onChange={handleChange}
-          fullWidth
-          required
-          sx={{ mb: 2 }}
-        />
-        <TextField
-          label="Why do you need these funds?"
-          name="loanPurpose"
-          value={formData.loanPurpose}
-          onChange={handleChange}
-          fullWidth
-          required
-          sx={{ mb: 2 }}
-        />
-        <TextField
-          label="Do you have any other source of income?"
-          name="otherIncome"
-          value={formData.otherIncome}
-          onChange={handleChange}
-          fullWidth
-          required
-          sx={{ mb: 2 }}
-        />
-        <TextField
-          label="Who all are in your family?"
-          name="familyDetails"
-          value={formData.familyDetails}
-          onChange={handleChange}
-          fullWidth
-          required
-          sx={{ mb: 2 }}
-        />
 
-        <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2, gap: 3 }}>
-          {!initiateCall && (
-            <Button
-              onClick={() => setInitiateCall(true)}
-              variant="contained"
-              color="primary"
-            >
-              Initiate Video
-            </Button>
-          )}
-          <Button variant="contained" onClick={handleSubmit}>
-            Submit
-          </Button>
-        </Box>
+      <Divider sx={{ mb: 3 }} />
+
+      <Box sx={{ overflowY: "auto", maxHeight: "650px", pr: 1 }}>
+        <Typography variant="h6" sx={{ mb: 2, fontWeight: 500 }}>
+          Work Details
+        </Typography>
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <TextField
+              label="Where are you working?"
+              name="workingPlace"
+              value={formData.workingPlace}
+              onChange={handleChange}
+              fullWidth
+              required
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="From how many years are you working?"
+              name="workingYears"
+              value={formData.workingYears}
+              onChange={handleChange}
+              fullWidth
+              required
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="Overall work experience?"
+              name="overallExperience"
+              value={formData.overallExperience}
+              onChange={handleChange}
+              fullWidth
+              required
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="What is your current designation?"
+              name="currentDesignation"
+              value={formData.currentDesignation}
+              onChange={handleChange}
+              fullWidth
+              required
+            />
+          </Grid>
+        </Grid>
+
+        <Divider sx={{ my: 3 }} />
+
+        <Typography variant="h6" sx={{ mb: 2, fontWeight: 500 }}>
+          Financial Details
+        </Typography>
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <TextField
+              label="What is the Gross salary?"
+              name="grossSalary"
+              value={formData.grossSalary}
+              onChange={handleChange}
+              fullWidth
+              required
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="On which date your salary gets credited?"
+              name="salaryCreditDate"
+              value={formData.salaryCreditDate}
+              onChange={handleChange}
+              fullWidth
+              required
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="What all obligations you have?"
+              name="obligations"
+              value={formData.obligations}
+              onChange={handleChange}
+              fullWidth
+              required
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="How much loan you require?"
+              name="loanAmount"
+              value={formData.loanAmount}
+              onChange={handleChange}
+              fullWidth
+              required
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="Why do you need these funds?"
+              name="loanPurpose"
+              value={formData.loanPurpose}
+              onChange={handleChange}
+              fullWidth
+              required
+            />
+          </Grid>
+        </Grid>
+
+        <Divider sx={{ my: 3 }} />
+
+        <Typography variant="h6" sx={{ mb: 2, fontWeight: 500 }}>
+          Additional Information
+        </Typography>
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <TextField
+              label="Do you have any other source of income?"
+              name="otherIncome"
+              value={formData.otherIncome}
+              onChange={handleChange}
+              fullWidth
+              required
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="Who all are in your family?"
+              name="familyDetails"
+              value={formData.familyDetails}
+              onChange={handleChange}
+              fullWidth
+              required
+            />
+          </Grid>
+        </Grid>
       </Box>
 
-
+      <Box
+        sx={{
+          mt: 3,
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: 2,
+        }}
+      >
+        {!initiateCall && (
+          <Button
+            onClick={() => setInitiateCall(true)}
+            variant="contained"
+            color="primary"
+          >
+            Initiate Video
+          </Button>
+        )}
+        <Button variant="contained" color="primary" onClick={handleSubmit}>
+          Submit
+        </Button>
+      </Box>
     </Box>
   );
 };

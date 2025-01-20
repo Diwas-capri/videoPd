@@ -220,6 +220,7 @@ const UserVideoBox = () => {
     <Container
       sx={{
         height: '100vh',
+        maxheight: '90vh',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

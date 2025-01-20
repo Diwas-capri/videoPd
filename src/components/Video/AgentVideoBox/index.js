@@ -4,7 +4,7 @@ import {
   IconButton,
   Box,
   Button,
-  Grid,
+  Grid2,
   Paper,
   Container,
   Tooltip,
@@ -165,30 +165,30 @@ const AgentVideoBox = () => {
   console.log('peer id ', peerId);
 
   return (
-    <Container maxWidth="md" sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+    <Container maxWidth="lg" sx={{ height: '800px', margin: 'auto', display: "flex", flexDirection: "column", gap: 3 }}>
       {/* Title */}
       <Typography variant="h4" align="center">
         Agent Video Screen
       </Typography>
 
       {/* Controls and Copy Button */}
-      <Grid container spacing={2} justifyContent="center" alignItems="center">
-        <Grid item>
+      <Grid2 container spacing={2} justifyContent="center" alignItems="center">
+        <Grid2 item>
           <IconButton onClick={toggleVideo} color={videoMuted ? "secondary" : "primary"}>
             {videoMuted ? <VideocamOffIcon /> : <VideocamIcon />}
           </IconButton>
-        </Grid>
-        <Grid item>
+        </Grid2>
+        <Grid2 item>
           <IconButton onClick={toggleAudio} color={audioMuted ? "secondary" : "primary"}>
             {audioMuted ? <MicOffIcon /> : <MicIcon />}
           </IconButton>
-        </Grid>
-        <Grid item>
+        </Grid2>
+        <Grid2 item>
           <IconButton onClick={endCall} color="error">
             <CallEndIcon />
           </IconButton>
-        </Grid>
-        <Grid item>
+        </Grid2>
+        <Grid2 item>
           {peerId && (
             <Button
               variant="contained"
@@ -200,8 +200,8 @@ const AgentVideoBox = () => {
               Copy Video Link
             </Button>
           )}
-        </Grid>
-      </Grid>
+        </Grid2>
+      </Grid2>
 
       {/* Video Screen */}
       <Box sx={{ position: "relative", width: "100%", aspectRatio: "16/9", backgroundColor: "#000", borderRadius: 2 }}>
