@@ -25,8 +25,9 @@ const UserVideoBox = () => {
   const [videoMuted, setVideoMuted] = useState(false);
   const [audioMuted, setAudioMuted] = useState(false);
   const [tellAnswerClick, setTellAnswerClick] = useState(false);
+  const [callEnded, setCallEnded] = useState(false);
   const [currentCamera, setCurrentCamera] = useState('user');
-  const {socket, connected} = useSocketContext();
+  const { socket, connected } = useSocketContext();
 
   const urlParams = new URLSearchParams(window.location.search);
   const agentPeerId = urlParams.get('peerId');
@@ -52,12 +53,17 @@ const UserVideoBox = () => {
       console.error('Peer connection error:', err);
     });
 
-    startVideo();
 
     return () => {
       peerInstance.destroy();
     };
   }, []);
+
+  useEffect(() => {
+    if(confimJoin){
+      startVideo();
+    }
+  }, [confimJoin])
 
   const startVideo = () => {
     navigator.mediaDevices
@@ -81,17 +87,17 @@ const UserVideoBox = () => {
         console.error("Error accessing media devices:", error);
       });
   };
-  
+
   const joinCall = () => {
     if (!agentPeerId) {
       alert('Agent Peer ID is missing. Ensure the correct link is used.');
       return;
     }
-  
+
     // Call the agent using the local stream (video and audio)
     const outgoingCall = peer.call(agentPeerId, localStreamSend);
     setCall(outgoingCall);
-  
+
     outgoingCall.on('stream', (remoteStream) => {
       // Display the remote video
       if (remoteVideoRef.current) {
@@ -99,7 +105,7 @@ const UserVideoBox = () => {
         remoteVideoRef.current.play();
       }
     });
-  
+
     outgoingCall.on('close', cleanup);
     outgoingCall.on('error', (error) => {
       console.error('Error in outgoing call:', error);
@@ -107,18 +113,25 @@ const UserVideoBox = () => {
   };
 
   const cleanup = () => {
-    setCall(null);
-    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
-  };
-
-  const endCall = () => {
-    if (call) call.close();
-    if (localStream) {
-      localStream.getTracks().forEach((track) => track.stop());
-      setLocalStream(null);
+    // Remove video element bindings (if any)
+    const videoElement = document.querySelector('video');
+    if (videoElement) {
+        videoElement.srcObject = null;
     }
+
+    // Stop media stream
+    if (localStream) {
+        localStream.getTracks().forEach((track) => track.stop());
+        localStreamSend.getTracks().forEach((track) => track.stop());
+    }
+    setCallEnded(true);
+};
+
+const endCall = () => {
+    if (call) call.close();
     cleanup();
-  };
+    setLocalStream(null);
+};
 
   const toggleVideo = () => {
     if (localStream) {
@@ -131,8 +144,8 @@ const UserVideoBox = () => {
   };
 
   const toggleAudio = () => {
-    if (localStream) {
-      const audioTrack = localStream.getAudioTracks()[0];
+    if (localStreamSend) {
+      const audioTrack = localStreamSend.getAudioTracks()[0];
       if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled;
         setAudioMuted(!audioTrack.enabled);
@@ -144,12 +157,12 @@ const UserVideoBox = () => {
     // Toggle between front and back camera
     const newCamera = currentCamera === 'user' ? 'environment' : 'user';
     setCurrentCamera(newCamera);
-  
+
     // Stop all current tracks (audio and video) before restarting the video
     if (localStream) {
       localStream.getTracks().forEach(track => track.stop());
     }
-  
+
     // Restart the video stream with the new camera
     navigator.mediaDevices
       .getUserMedia({ video: { facingMode: newCamera }, audio: true })
@@ -157,7 +170,7 @@ const UserVideoBox = () => {
         // Set the new stream
         MediaRecorder(newStream, socket);
         setLocalStream(newStream);
-  
+
         // Set the new stream to the local video element
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = newStream;
@@ -170,28 +183,28 @@ const UserVideoBox = () => {
   };
   const startRecording = () => {
     if (localStreamSend) {
-  
+
       const mediaRecorder = new MediaRecorder(localStreamSend, { mimeType: 'video/webm; codecs=vp8' });
       mediaRecorderRef.current = mediaRecorder;
-  
+
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           setRecordedChunks((prev) => [...prev, event.data]);
         }
       };
-  
+
       mediaRecorder.onstop = () => {
         const videoBlob = new Blob(recordedChunks, { type: 'video/webm' });
         const videoUrl = URL.createObjectURL(videoBlob);
         window.open(videoUrl, '_blank');
       };
-  
+
       mediaRecorder.start();
       console.log('Recording started.');
     }
   };
-  
-  
+
+
 
   const stopRecording = () => {
     setRecordedChunks([]);
@@ -205,7 +218,33 @@ const UserVideoBox = () => {
       return !prev
     });
   };
-
+  if (callEnded) {
+    return (
+      <Paper
+        elevation={3}
+        style={{
+          padding: '20px',
+          textAlign: 'center',
+          maxWidth: '400px',
+          margin: '50px auto',
+          backgroundColor: '#f0f8ff',
+        }}
+      >
+        <Box>
+          <Typography
+            variant="h5"
+            style={{
+              fontWeight: 'bold',
+              marginBottom: '10px',
+              color: '#2e7d32',
+            }}
+          >
+            Thank You for Joining!
+          </Typography>
+        </Box>
+      </Paper>
+    )
+  }
   return (
     <Container
       sx={{
@@ -325,16 +364,16 @@ const UserVideoBox = () => {
           </Box>
         ) : (
           <Box
-          sx={{
-            width: '100%',
-            textAlign: 'center',
-            marginTop: 2,
-          }}
-        >
-          <Button variant="contained" color="primary" onClick={tellAnswer}>
-            { tellAnswerClick ? 'Listining...' : 'Tell Answer'}
-          </Button>
-        </Box>
+            sx={{
+              width: '100%',
+              textAlign: 'center',
+              marginTop: 2,
+            }}
+          >
+            {/* <Button variant="contained" color="primary" onClick={tellAnswer}>
+            { tellAnswerClick ? 'Listining...' : ''}
+          </Button> */}
+          </Box>
         )}
       </Paper>
       <OTPVerificationModal open={!confimJoin} setConfirmJoin={setConfirmJoin} />

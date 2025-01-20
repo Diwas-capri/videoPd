@@ -19,7 +19,6 @@ const OTPVerificationModal = ({ open, setConfirmJoin }) => {
 
   const handleSendOtp = () => {
     if (phoneNumber.length === 10) {
-      alert(`OTP sent to ${phoneNumber}. (Dummy OTP: ${dummyOtp})`);
       setStep("verify");
     } else {
       alert("Please enter a valid phone number.");

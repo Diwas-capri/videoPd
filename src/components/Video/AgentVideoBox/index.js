@@ -53,6 +53,7 @@ const AgentVideoBox = ({setInitiateCall, initiateCall}) => {
   const [asking, setAsking] = React.useState(false);
   const [selectedOption, setSelectedOption] = React.useState("");
   const [recorder, setRecorder] = useState(null);
+  const [messageSent, setMessageSent] = useState(false);
   const { socket, connected, receiveEventdata } = useSocketContext();
 
   useEffect(() => {
@@ -71,11 +72,15 @@ const AgentVideoBox = ({setInitiateCall, initiateCall}) => {
   
       incomingCall.answer(localStreamSend);
       setCall(incomingCall);
-  
+      let messageSent = false;
       incomingCall.on("stream", (remoteStream) => {
         if (remoteVideoRef.current) {
           remoteVideoRef.current.srcObject = remoteStream;
           remoteVideoRef.current.play();
+          if(!messageSent){
+            socket.send('send_answer'); 
+            messageSent = true;
+          }
         }
       });
   
@@ -123,16 +128,34 @@ const AgentVideoBox = ({setInitiateCall, initiateCall}) => {
   }, []);
 
   const cleanup = () => {
+    console.log("Cleaning up...");
     setCall(null);
-    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+    if (remoteVideoRef.current) {
+      console.log("Clearing remote video source...");
+      remoteVideoRef.current.srcObject = null;
+    }
+    // Clear other refs if needed (e.g., local video preview)
   };
-
+  
   const endCall = () => {
-    if (call) call.close();
+    if (call) {
+      call.close();
+    }
+  
     if (localStream) {
-      localStream.getTracks().forEach((track) => track.stop());
+      localStream.getTracks().forEach((track) => {
+        track.stop();
+      });
       setLocalStream(null);
     }
+
+    if (localStreamSend) {
+      localStreamSend.getTracks().forEach((track) => {
+        track.stop();
+      });
+      setLocalStreamSend(null);
+    }
+  
     cleanup();
     setInitiateCall(false);
   };
@@ -146,8 +169,8 @@ const AgentVideoBox = ({setInitiateCall, initiateCall}) => {
   };
 
   const toggleAudio = () => {
-    if (localStream) {
-      const audioTrack = localStream.getAudioTracks()[0];
+    if (localStreamSend) {
+      const audioTrack = localStreamSend.getAudioTracks()[0];
       audioTrack.enabled = !audioTrack.enabled;
       setAudioMuted(!audioTrack.enabled);
     }
@@ -165,12 +188,12 @@ const AgentVideoBox = ({setInitiateCall, initiateCall}) => {
     }
   };
 
-  const handleAskingToogle = () => {
-    setAsking(!asking);
-    if(asking){
-      socket.send('send_answer');
-    }
-  }
+  // const handleAskingToogle = () => {
+  //   setAsking(!asking);
+  //   if(asking){
+      
+  //   }
+  // }
 
   return (
     <Container maxWidth="md" sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
@@ -188,7 +211,7 @@ const AgentVideoBox = ({setInitiateCall, initiateCall}) => {
                   navigator.clipboard.writeText(`${window?.location}user?peerId=${peerId}`)
                 }
               >
-                Copy Video Link
+                Send Video Link
               </Button>
             )}
         </Grid>
@@ -211,7 +234,7 @@ const AgentVideoBox = ({setInitiateCall, initiateCall}) => {
             <CallEndIcon />
           </IconButton>
         </Grid>
-        <Grid item>
+        {/* <Grid item>
           <Button
               variant="contained"
               color="primary"
@@ -220,7 +243,7 @@ const AgentVideoBox = ({setInitiateCall, initiateCall}) => {
             >
               {!asking ? 'Ask Question' : 'Listing...'}
             </Button>
-        </Grid>
+        </Grid> */}
       </Grid>
 
       {/* Video Screen */}
