@@ -55,6 +55,12 @@ const AgentVideoBox = ({ setInitiateCall, initiateCall }) => {
   const { socket, connected, receiveEventdata } = useSocketContext();
 
   useEffect(() => {
+    if(remoteVideoRef.current){
+      setLoading(false);
+    }
+  }, [remoteVideoRef])
+
+  useEffect(() => {
     if (!localStream) return;
 
     const peerInstance = new Peer();
@@ -207,36 +213,6 @@ const AgentVideoBox = ({ setInitiateCall, initiateCall }) => {
           )}
         </Grid>
       </Box>
-
-      {/* Controls and Copy Button */}
-      <Grid container spacing={2} justifyContent="center" alignItems="center">
-        <Grid item>
-          <IconButton onClick={toggleVideo} color={videoMuted ? "secondary" : "primary"}>
-            {videoMuted ? <VideocamOffIcon /> : <VideocamIcon />}
-          </IconButton>
-        </Grid>
-        <Grid item>
-          <IconButton onClick={toggleAudio} color={audioMuted ? "secondary" : "primary"}>
-            {audioMuted ? <MicOffIcon /> : <MicIcon />}
-          </IconButton>
-        </Grid>
-        <Grid item>
-          <IconButton onClick={endCall} color="error">
-            <CallEndIcon />
-          </IconButton>
-        </Grid>
-        {/* <Grid item>
-          <Button
-              variant="contained"
-              color="primary"
-              onClick={() => socket.send('toogle_camera')}
-              sx={{ width: "100%" }}
-            >
-              Toogle user camera
-            </Button>
-        </Grid> */}
-      </Grid>
-
       {/* Video Screen */}
       <Box
         sx={{
@@ -273,7 +249,7 @@ const AgentVideoBox = ({ setInitiateCall, initiateCall }) => {
         {/* Video Elements */}
         <video
           ref={remoteVideoRef}
-          style={{ width: "100%", height: "500px", borderRadius: "8px" }}
+          style={{ width: "100%", height: "500px", borderRadius: "8px",transform: 'ScaleX(-1)'  }}
           autoPlay
         />
         <video
@@ -285,6 +261,7 @@ const AgentVideoBox = ({ setInitiateCall, initiateCall }) => {
             position: "absolute",
             top: 8,
             left: 1,
+            transform: 'ScaleX(-1)'
           }}
           autoPlay
         />
@@ -300,6 +277,35 @@ const AgentVideoBox = ({ setInitiateCall, initiateCall }) => {
             <br />
             Long : 77.1023293
         </Box>
+
+        <Grid container spacing={2} justifyContent="center" alignItems="center" sx={{position: 'absolute', bottom: 15, right: 0}}>
+        <Grid item>
+          <IconButton onClick={toggleVideo} color={videoMuted ? "secondary" : "primary"}>
+            {videoMuted ? <VideocamOffIcon /> : <VideocamIcon />}
+          </IconButton>
+        </Grid>
+        <Grid item>
+          <IconButton onClick={toggleAudio} color={audioMuted ? "secondary" : "primary"}>
+            {audioMuted ? <MicOffIcon /> : <MicIcon />}
+          </IconButton>
+        </Grid>
+        <Grid item>
+          <IconButton onClick={endCall} color="error">
+            <CallEndIcon />
+          </IconButton>
+        </Grid>
+        {/* <Grid item>
+          <Button
+              variant="contained"
+              color="primary"
+              onClick={() => socket.send('toogle_camera')}
+              sx={{ width: "100%" }}
+            >
+              Toogle user camera
+            </Button>
+        </Grid> */}
+      </Grid>
+
         {/* Capture Image Button */}
         <Tooltip title="Capture Image">
           <IconButton

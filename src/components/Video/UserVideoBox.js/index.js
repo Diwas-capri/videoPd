@@ -266,6 +266,7 @@ const endCall = () => {
               width: '100%',
               height: 'auto',
               borderRadius: 8,
+              transform: 'ScaleX(-1)'
             }}
             autoPlay
           />
@@ -281,6 +282,7 @@ const endCall = () => {
               height: '20%',
               borderRadius: 8,
               border: '2px solid white',
+              transform: 'ScaleX(-1)'
             }}
             autoPlay
           />
