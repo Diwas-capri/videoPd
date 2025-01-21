@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useDebugValue, useEffect, useRef, useState } from "react";
 import {
   Typography,
   IconButton,
@@ -13,6 +13,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  CircularProgress,
 } from "@mui/material";
 import CallEndIcon from "@mui/icons-material/CallEnd";
 import VideocamOffIcon from "@mui/icons-material/VideocamOff";
@@ -38,83 +39,76 @@ const style = {
 };
 
 
-const AgentVideoBox = ({setInitiateCall, initiateCall}) => {
+const AgentVideoBox = ({ setInitiateCall, initiateCall }) => {
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const [peer, setPeer] = useState(null);
   const [peerId, setPeerId] = useState(null);
   const [call, setCall] = useState(null);
   const [localStream, setLocalStream] = useState(null);
-  const [localStreamSend, setLocalStreamSend] = useState(null);
   const [videoMuted, setVideoMuted] = useState(false);
   const [audioMuted, setAudioMuted] = useState(false);
   const [imageCaptured, setImageCaptured] = useState([]);
   const [open, setOpen] = React.useState(false);
-  const [asking, setAsking] = React.useState(false);
   const [selectedOption, setSelectedOption] = React.useState("");
-  const [recorder, setRecorder] = useState(null);
-  const [messageSent, setMessageSent] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { socket, connected, receiveEventdata } = useSocketContext();
 
   useEffect(() => {
     if (!localStream) return;
-  
+
     const peerInstance = new Peer();
     setPeer(peerInstance);
-  
+
     peerInstance.on("open", (id) => {
       console.log("Peer ID start:", id);
       setPeerId(id);
     });
-  
+
     peerInstance.on("call", (incomingCall) => {
       if (!localStream) return;
-  
-      incomingCall.answer(localStreamSend);
+
+      incomingCall.answer(localStream);
       setCall(incomingCall);
       let messageSent = false;
       incomingCall.on("stream", (remoteStream) => {
         if (remoteVideoRef.current) {
           remoteVideoRef.current.srcObject = remoteStream;
           remoteVideoRef.current.play();
-          if(!messageSent){
-            socket.send('send_answer'); 
+          if (!messageSent) {
+            socket.send('send_answer');
             messageSent = true;
           }
+          setLoading(false);
         }
       });
-  
+
       incomingCall.on("close", () => {
         console.log("Call closed.");
         cleanup();
       });
     });
-  
+
     peerInstance.on("error", (err) => {
       console.error("Peer error:", err);
     });
-  
+
     return () => {
       console.log("Cleaning up Peer instance.");
       peerInstance.destroy();
     };
   }, [localStream]);
-  
+
 
   const startVideo = () => {
     navigator.mediaDevices
       .getUserMedia({ video: true, audio: true })
       .then((stream) => {
         mediaRecorderHelper(stream, socket);
-        setLocalStreamSend(stream);
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
           localVideoRef.current.play();
           localVideoRef.current.muted = true;
-        }
-        const audioTrack = stream.getAudioTracks()[0];
-        if (audioTrack) {
-          audioTrack.enabled = false;
         }
         setLocalStream(stream);
       })
@@ -122,40 +116,37 @@ const AgentVideoBox = ({setInitiateCall, initiateCall}) => {
         console.error("Error accessing media devices:", error);
       });
   };
-  
+
   useEffect(() => {
-      startVideo();
+    startVideo();
   }, []);
 
   const cleanup = () => {
-    console.log("Cleaning up...");
     setCall(null);
     if (remoteVideoRef.current) {
-      console.log("Clearing remote video source...");
       remoteVideoRef.current.srcObject = null;
     }
-    // Clear other refs if needed (e.g., local video preview)
+    setInitiateCall(false);
   };
-  
+
   const endCall = () => {
     if (call) {
       call.close();
     }
-  
+
     if (localStream) {
+      // Stop all media tracks
       localStream.getTracks().forEach((track) => {
         track.stop();
+        track.enabled = false;
       });
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = null;
+      }
+
       setLocalStream(null);
     }
 
-    if (localStreamSend) {
-      localStreamSend.getTracks().forEach((track) => {
-        track.stop();
-      });
-      setLocalStreamSend(null);
-    }
-  
     cleanup();
     setInitiateCall(false);
   };
@@ -169,8 +160,8 @@ const AgentVideoBox = ({setInitiateCall, initiateCall}) => {
   };
 
   const toggleAudio = () => {
-    if (localStreamSend) {
-      const audioTrack = localStreamSend.getAudioTracks()[0];
+    if (localStream) {
+      const audioTrack = localStream.getAudioTracks()[0];
       audioTrack.enabled = !audioTrack.enabled;
       setAudioMuted(!audioTrack.enabled);
     }
@@ -191,29 +182,29 @@ const AgentVideoBox = ({setInitiateCall, initiateCall}) => {
   // const handleAskingToogle = () => {
   //   setAsking(!asking);
   //   if(asking){
-      
+
   //   }
   // }
 
   return (
     <Container maxWidth="md" sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
       {/* Title */}
-      <Box sx={{display: "flex", flexDirection: "row", gap: 2, justifyContent: "space-between"}}>
+      <Box sx={{ display: "flex", flexDirection: "row", gap: 2, justifyContent: "space-between" }}>
         <Typography variant="h4" align="center">
           Agent Video Screen
         </Typography>
         <Grid item>
-            {peerId && (
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() =>
-                  navigator.clipboard.writeText(`${window?.location}user?peerId=${peerId}`)
-                }
-              >
-                Send Video Link
-              </Button>
-            )}
+          {peerId && (
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() =>
+                navigator.clipboard.writeText(`${window?.location}user?peerId=${peerId}`)
+              }
+            >
+              Send Video Link
+            </Button>
+          )}
         </Grid>
       </Box>
 
@@ -238,16 +229,48 @@ const AgentVideoBox = ({setInitiateCall, initiateCall}) => {
           <Button
               variant="contained"
               color="primary"
-              onClick={handleAskingToogle}
+              onClick={() => socket.send('toogle_camera')}
               sx={{ width: "100%" }}
             >
-              {!asking ? 'Ask Question' : 'Listing...'}
+              Toogle user camera
             </Button>
         </Grid> */}
       </Grid>
 
       {/* Video Screen */}
-      <Box sx={{ position: "relative", width: "100%", aspectRatio: "16/9", backgroundColor: "#000", borderRadius: 2 }}>
+      <Box
+        sx={{
+          position: "relative",
+          width: "100%",
+          aspectRatio: "16/9",
+          backgroundColor: "#000",
+          borderRadius: 2,
+          overflow: "hidden", // Ensures no content overflows outside the box
+        }}
+      >
+        {/* Loading Indicator */}
+        {loading && (
+          <Box
+            sx={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexDirection: 'column',
+              backgroundColor: "rgba(0, 0, 0, 0.6)",
+              zIndex: 10,
+            }}
+          >
+            <CircularProgress />
+            <h3 style={{ color: 'white' }}>Waiting for user to join.</h3>
+          </Box>
+        )}
+
+        {/* Video Elements */}
         <video
           ref={remoteVideoRef}
           style={{ width: "100%", height: "500px", borderRadius: "8px" }}
@@ -256,15 +279,28 @@ const AgentVideoBox = ({setInitiateCall, initiateCall}) => {
         <video
           ref={localVideoRef}
           style={{
-             width: "20%",
-             height: "20%",
-             borderRadius: "8px",
-             position: "absolute",
-             top: 8,
-             left: 1,
-           }}
+            width: "20%",
+            height: "20%",
+            borderRadius: "8px",
+            position: "absolute",
+            top: 8,
+            left: 1,
+          }}
           autoPlay
         />
+
+        <Box sx={{
+          color: 'white',
+          position: 'absolute',
+          bottom: 1,
+          left: 1,
+          p: 2
+          }}>
+            Lat : 28.4799615
+            <br />
+            Long : 77.1023293
+        </Box>
+        {/* Capture Image Button */}
         <Tooltip title="Capture Image">
           <IconButton
             sx={{
@@ -276,14 +312,15 @@ const AgentVideoBox = ({setInitiateCall, initiateCall}) => {
               "&:hover": {
                 backgroundColor: "rgba(0,0,0,0.8)",
               },
+              zIndex: 5, // Ensures it stays above the videos
             }}
             onClick={() => setOpen(true)}
-          // onClick={captureImage}
           >
             <CameraAltIcon />
           </IconButton>
         </Tooltip>
       </Box>
+
 
       {/* Gallery */}
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>

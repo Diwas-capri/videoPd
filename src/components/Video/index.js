@@ -13,18 +13,20 @@ const MainScreen = () => {
         p: 4,
         display: "flex",
         flexDirection: "row",
-        alignItems: "center",
+        alignItems: "stretch",
         gap: 3,
       }}
     >
       {initiateCall && (
         <Paper
           sx={{
-            width: initiateCall ? "50%" : "100%",
+            flex: 1,
             padding: 3,
             borderRadius: 2,
             boxShadow: 3,
             transition: "width 0.3s",
+            display: "flex",
+            flexDirection: "column",
           }}
         >
           <AgentVideoScreen
@@ -35,11 +37,13 @@ const MainScreen = () => {
       )}
       <Paper
         sx={{
-          width: initiateCall ? "50%" : "100%",
+          flex: 1,
           padding: 3,
           borderRadius: 2,
           boxShadow: 3,
           transition: "width 0.3s",
+          display: "flex",
+          flexDirection: "column",
         }}
       >
         <StepperForm

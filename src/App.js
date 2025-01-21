@@ -4,17 +4,20 @@ import UserVideoScreen from './components/Video/UserVideoBox.js';
 import StepperForm from './components/StepperForm';
 import MainScreen from './components/Video/index.js';
 import { SocketProvider } from './context/SocketContext.js';
+import ErrorBoundary from './ErrorBoundary.js';
 
 const App = () => (
-  <SocketProvider>
-    <Router>
-      <Routes>
-        <Route path="/" element={<MainScreen />} />
-        <Route path="/agent" element={<AgentVideoScreen />} />
-        <Route path="/user" element={<UserVideoScreen />} />
-      </Routes>
-    </Router>
-  </SocketProvider>
+  <ErrorBoundary>
+    <SocketProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<MainScreen />} />
+          <Route path="/agent" element={<AgentVideoScreen />} />
+          <Route path="/user" element={<UserVideoScreen />} />
+        </Routes>
+      </Router>
+    </SocketProvider>
+  </ErrorBoundary>
     
 );
 

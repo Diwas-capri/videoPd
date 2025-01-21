@@ -47,7 +47,6 @@ const StepperForm = ({ setInitiateCall, initiateCall }) => {
         mx: "auto",
         p: 1,
       }}
-      component={Paper}
     >
       <Typography variant="h5" align="center" sx={{ mb: 3, fontWeight: 600 }}>
         Questions

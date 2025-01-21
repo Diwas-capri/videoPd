@@ -19,7 +19,6 @@ const UserVideoBox = () => {
   const [peer, setPeer] = useState(null);
   const [call, setCall] = useState(null);
   const [localStream, setLocalStream] = useState(null);
-  const [localStreamSend, setLocalStreamSend] = useState(null);
   const [recordedChunks, setRecordedChunks] = useState([]);
   const mediaRecorderRef = useRef(null);
   const [videoMuted, setVideoMuted] = useState(false);
@@ -27,10 +26,15 @@ const UserVideoBox = () => {
   const [tellAnswerClick, setTellAnswerClick] = useState(false);
   const [callEnded, setCallEnded] = useState(false);
   const [currentCamera, setCurrentCamera] = useState('user');
-  const { socket, connected } = useSocketContext();
+  const { socket, receiveEventdata } = useSocketContext();
 
   const urlParams = new URLSearchParams(window.location.search);
   const agentPeerId = urlParams.get('peerId');
+
+  useEffect(() => {
+      console.log('Receive message ', receiveEventdata);
+    }, [receiveEventdata]);
+  
 
   useEffect(() => {
     const peerInstance = new Peer();
@@ -75,11 +79,6 @@ const UserVideoBox = () => {
           localVideoRef.current.play();
           localVideoRef.current.muted = true;
         }
-        setLocalStreamSend(stream);
-        const audioTrack = stream.getAudioTracks()[0];
-        if (audioTrack) {
-          audioTrack.enabled = false;
-        }
         setLocalStream(stream);
         // MediaRecorder(stream, socket);
       })
@@ -88,14 +87,14 @@ const UserVideoBox = () => {
       });
   };
 
-  const joinCall = () => {
+  const joinCall = (currentStream) => {
     if (!agentPeerId) {
       alert('Agent Peer ID is missing. Ensure the correct link is used.');
       return;
     }
 
     // Call the agent using the local stream (video and audio)
-    const outgoingCall = peer.call(agentPeerId, localStreamSend);
+    const outgoingCall = peer.call(agentPeerId, currentStream || localStream);
     setCall(outgoingCall);
 
     outgoingCall.on('stream', (remoteStream) => {
@@ -122,7 +121,6 @@ const UserVideoBox = () => {
     // Stop media stream
     if (localStream) {
         localStream.getTracks().forEach((track) => track.stop());
-        localStreamSend.getTracks().forEach((track) => track.stop());
     }
     setCallEnded(true);
 };
@@ -144,8 +142,8 @@ const endCall = () => {
   };
 
   const toggleAudio = () => {
-    if (localStreamSend) {
-      const audioTrack = localStreamSend.getAudioTracks()[0];
+    if (localStream) {
+      const audioTrack = localStream.getAudioTracks()[0];
       if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled;
         setAudioMuted(!audioTrack.enabled);
@@ -165,7 +163,7 @@ const endCall = () => {
 
     // Restart the video stream with the new camera
     navigator.mediaDevices
-      .getUserMedia({ video: { facingMode: newCamera }, audio: true })
+      .getUserMedia({ video: { facingMode: newCamera }, audio: audioMuted })
       .then((newStream) => {
         // Set the new stream
         MediaRecorder(newStream, socket);
@@ -176,15 +174,16 @@ const endCall = () => {
           localVideoRef.current.srcObject = newStream;
           localVideoRef.current.play();
         }
+        joinCall(newStream);
       })
       .catch((error) => {
         console.error('Error accessing media devices:', error);
       });
   };
   const startRecording = () => {
-    if (localStreamSend) {
+    if (localStream) {
 
-      const mediaRecorder = new MediaRecorder(localStreamSend, { mimeType: 'video/webm; codecs=vp8' });
+      const mediaRecorder = new MediaRecorder(localStream, { mimeType: 'video/webm; codecs=vp8' });
       mediaRecorderRef.current = mediaRecorder;
 
       mediaRecorder.ondataavailable = (event) => {
@@ -358,7 +357,7 @@ const endCall = () => {
               marginTop: 2,
             }}
           >
-            <Button variant="contained" color="primary" onClick={joinCall}>
+            <Button variant="contained" color="primary" onClick={() => joinCall(false)}>
               Join Call
             </Button>
           </Box>
